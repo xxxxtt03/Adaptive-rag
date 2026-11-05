@@ -75,6 +75,16 @@ class IntentClassifier:
         self._apply_overlay = apply_overlay
 
     async def classify(self, query: str) -> IntentResult:
+        clean_text = query.strip()
+        if re.fullmatch(
+            r"(?:你好|您好|hi|hello|在吗|早|早上好|晚上好|嗨)[!！?？~～。．.\s]*", clean_text, re.I
+        ):
+            return IntentResult(
+                label=IntentLabel.GREETING,
+                confidence=1.0,
+                rationale="fast_path:exact_greeting",
+                prompt_version="fast_path_v1",
+            )
         fallback = rule_based_intent(query)
         if isinstance(self._llm, OfflineLLMProvider):
             return self._maybe_overlay(query, fallback)

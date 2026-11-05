@@ -134,6 +134,13 @@ class AdaptiveRouter:
 
     async def route(self, query: str, intent: IntentResult) -> ComplexityResult:
         fallback = rule_based_complexity(query, intent)
+        if intent.label in {IntentLabel.GREETING, IntentLabel.CHITCHAT}:
+            return ComplexityResult(
+                complexity=QueryComplexity.SIMPLE,
+                strategy=RetrievalStrategy.DIRECT,
+                confidence=1.0,
+                rationale="fast_path:social_direct",
+            )
         if isinstance(self._llm, OfflineLLMProvider):
             return fallback
         try:

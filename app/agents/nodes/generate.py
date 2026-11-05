@@ -8,7 +8,7 @@ import time
 from pydantic import BaseModel, Field
 
 from app.agents.state import AgentState
-from app.core.enums import RetrievalStrategy
+from app.core.enums import IntentLabel, RetrievalStrategy
 from app.core.exceptions import LLMOutputError, LLMProviderError
 from app.prompts.answer import ANSWER_SYSTEM, ANSWER_USER
 from app.providers.base import LLMProvider
@@ -52,6 +52,15 @@ async def generate_node(state: AgentState, llm: LLMProvider) -> dict:
     tool_text = json.dumps([t.model_dump() for t in tools], ensure_ascii=False) if tools else "(无)"
     intent = state.get("intent")
     strategy = state.get("strategy") or RetrievalStrategy.DIRECT
+    if strategy == RetrievalStrategy.DIRECT and intent and intent.label == IntentLabel.GREETING:
+        latency = state.get("latency") or LatencyBreakdown()
+        latency.llm_ms = (time.perf_counter() - started) * 1000
+        return {
+            "final_answer": "你好！我是您的电商智能客服，很高兴为您服务。请问有什么我可以帮您的？（如：退换货政策、订单查询、物流轨迹跟踪等）",
+            "citations": [],
+            "refused": False,
+            "latency": latency,
+        }
     if isinstance(llm, OfflineLLMProvider):
         answer, citation_ids = _offline_answer(state)
         citations = [
