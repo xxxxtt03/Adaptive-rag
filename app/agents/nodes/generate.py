@@ -49,6 +49,9 @@ async def generate_node(state: AgentState, llm: LLMProvider) -> dict:
     evidence = (
         "\n\n".join(f"[{c.chunk_id}] {c.title}\n{c.content}" for c in chunks[:6]) or "(无检索结果)"
     )
+    extra = state.get("extra") or {}
+    if extra.get("graph_context"):
+        evidence = f"{extra['graph_context']}\n\n{evidence}"
     tool_text = json.dumps([t.model_dump() for t in tools], ensure_ascii=False) if tools else "(无)"
     intent = state.get("intent")
     strategy = state.get("strategy") or RetrievalStrategy.DIRECT
@@ -206,11 +209,13 @@ def _offline_answer(state: AgentState) -> tuple[str, set[str]]:
                 )
 
     chunks = state.get("retrieved_chunks") or []
+    extra = state.get("extra") or {}
+    prefix = f"{extra['graph_context']}\n\n" if extra.get("graph_context") else ""
     if chunks:
         chunk = chunks[0]
         excerpt = chunk.content.strip()[:260]
         return (
-            f"当前未配置生成模型，以下是《{chunk.title}》的资料节选，请核对原文：\n\n> {excerpt}",
+            f"{prefix}当前未配置生成模型，以下是《{chunk.title}》的资料节选，请核对原文：\n\n> {excerpt}",
             {chunk.chunk_id},
         )
     return (

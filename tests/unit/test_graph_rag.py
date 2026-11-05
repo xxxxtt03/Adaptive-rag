@@ -53,3 +53,38 @@ def test_unmatched_query_returns_empty():
     assert len(result.matched_entities) == 0
     assert len(result.constraints) == 0
     assert result.structured_context == ""
+
+
+@pytest.mark.asyncio
+async def test_graph_rag_integration_with_generate_node():
+    from app.agents.nodes.generate import generate_node
+    from app.core.enums import RetrievalStrategy
+    from app.providers.fake import OfflineLLMProvider
+    from app.schemas.retrieval import RetrievedChunk
+
+    graph = build_ecommerce_policy_graph()
+    graph_res = graph.query("定制马克杯过了七天支持退换吗？")
+
+    chunk = RetrievedChunk(
+        chunk_id="chk-custom",
+        document_id="doc-custom",
+        title="定制商品售后政策",
+        content="定制商品不支持7天无理由退货，但质量问题15天内支持退款。",
+        score=0.9,
+    )
+
+    state = {
+        "user_query": "定制马克杯过了七天支持退换吗？",
+        "strategy": RetrievalStrategy.SINGLE,
+        "retrieved_chunks": [chunk],
+        "extra": {"graph_context": graph_res.structured_context},
+    }
+
+    result = await generate_node(state, OfflineLLMProvider())
+    answer = result["final_answer"]
+
+    # Verify that graph constraints are explicitly prepended to guide user/agent
+    assert "【政策知识图谱确定性约束 (Graph-RAG)】" in answer
+    assert "定制商品 -> excluded_from -> 7天无理由退货" in answer
+    assert "定制商品 -> exception_allowed -> 质量问题售后" in answer
+    assert "定制商品售后政策" in answer
