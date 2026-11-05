@@ -65,14 +65,14 @@ api:
 - [ ] `pip install -e ".[rerank]"` 后重跑 retrieval，报告含 `hybrid+cross-encoder`
 - [ ] `pip install -e ".[docs]"` 后用真实 PDF/扫描件验证 ingest；换切分后重跑 `--task retrieval`
 - [x] `u_demo` / `anonymous` 全局读单已关闭
-- [ ] 在可信网关认证用户并绑定 `user_id`；当前请求体仍可伪造身份，不可直接对公网开放
+- [x] 在可信网关认证用户并绑定 `user_id`；已实现 JWT 零信任认证与请求体身份强覆盖（见 `app/core/auth.py` 与 `04158f5` 提交）
 - [ ] liveness / readiness 分开（见 [08](08-reliability.md#探活)）
 - [ ] 密钥不在日志、镜像、README
 - [ ] 长期 Postgres 用 Alembic（现在启动仍 `create_all`）
 
 ## 扩容、知识库、回滚
 
-API 无粘滞：session 在 DB。进程内限流多副本不共享 → 生产配 Redis。Graph 每进程编译一次。
+API 无粘滞：session 在 DB。进程内限流多副本不共享、二次确认动作多节点漂移已通过 `RedisConfirmationStore` 彻底解决（生产配 Redis，见 `04158f5`）。Graph 每进程编译一次。
 
 改 `knowledge/` 文档后重启 API。`chunk_id` 在同一切分结果下稳定，Qdrant upsert 覆盖。无 CMS。生产 ingest 走 Unstructured；系统包需要 poppler、tesseract（`chi_sim`）、处理 Office 时的 libreoffice。换解析器后重跑 `--task retrieval`。
 
