@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from app.config.settings import Settings
+from app.infra.confirmation_store import InMemoryConfirmationStore, RedisConfirmationStore
 from app.infra.rate_limit import InMemoryRateLimiter, RedisRateLimiter
 from app.infra.redis_client import connect_redis
 from app.mcp.adapter import merge_mcp_tools
@@ -116,6 +117,11 @@ async def build_container(settings: Settings, seed: bool = False) -> AppContaine
                 }
             )
         merge_mcp_tools(registry, specs)
+    confirmation_store = (
+        RedisConfirmationStore(redis)
+        if redis is not None
+        else InMemoryConfirmationStore()
+    )
     chat_service = ChatService(
         settings=settings,
         llm=llm,
@@ -124,6 +130,7 @@ async def build_container(settings: Settings, seed: bool = False) -> AppContaine
         session_factory=session_factory,
         rate_limiter=rate_limiter,
         registry=registry,
+        confirmation_store=confirmation_store,
     )
     if seed:
         async with session_factory() as session:

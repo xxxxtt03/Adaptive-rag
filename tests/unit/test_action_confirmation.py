@@ -42,7 +42,8 @@ async def test_cancellation_needs_explicit_request_and_confirmation() -> None:
     assert confirmed["plan"].steps[0].arguments == {"order_id": "ORD10003"}
 
 
-def test_confirmation_is_bound_to_session_and_user() -> None:
+@pytest.mark.asyncio
+async def test_confirmation_is_bound_to_session_and_user() -> None:
     service = ChatService.__new__(ChatService)
     service._pending_actions = {}
     request = ChatRequest(message="取消订单 ORD10003", user_id="u_demo")
@@ -52,7 +53,7 @@ def test_confirmation_is_bound_to_session_and_user() -> None:
         trace_id="trace_demo",
         pending_action=_action(),
     )
-    service._remember_pending(request, response)
+    await service._remember_pending(request, response)
 
     confirmed = ChatRequest(
         message="确认执行",
@@ -60,10 +61,10 @@ def test_confirmation_is_bound_to_session_and_user() -> None:
         session_id="sess_demo",
         confirm_action_id="act_test",
     )
-    assert service._resolve_confirmation(confirmed, "sess_demo") == _action()
+    assert await service._resolve_confirmation(confirmed, "sess_demo") == _action()
 
     forged = confirmed.model_copy(update={"user_id": "someone_else"})
     with pytest.raises(InvalidRequestError):
-        service._resolve_confirmation(forged, "sess_demo")
+        await service._resolve_confirmation(forged, "sess_demo")
     with pytest.raises(InvalidRequestError):
-        service._resolve_confirmation(confirmed, "another_session")
+        await service._resolve_confirmation(confirmed, "another_session")

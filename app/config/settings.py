@@ -70,6 +70,10 @@ class Settings(BaseSettings):
     db_max_overflow: int = 10
     db_pool_timeout: int = 30
     admin_api_token: SecretStr = SecretStr("")
+    jwt_secret_key: SecretStr = SecretStr("adaptive-rag-insecure-dev-secret-key-32-chars-long!")
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_minutes: int = 1440
+    auth_required: bool = False
     knowledge_dir: str = "knowledge"
     unstructured_enabled: bool = True
     unstructured_strategy: str = "auto"

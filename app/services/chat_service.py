@@ -17,6 +17,11 @@ from app.config.settings import Settings
 from app.core.exceptions import AppError, GuardrailError, InvalidRequestError, RateLimitError
 from app.core.ids import new_id
 from app.core.request_scope import request_session
+from app.infra.confirmation_store import (
+    ConfirmationStore,
+    InMemoryConfirmationStore,
+    PendingConfirmation,
+)
 from app.infra.rate_limit import RateLimiter
 from app.observability.metrics import REQUEST_LATENCY, REQUESTS, ROUTING, STAGE_LATENCY, TOKEN_USAGE
 from app.providers.base import LLMProvider
@@ -31,14 +36,6 @@ from app.tools.registry import ToolRegistry
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PendingConfirmation:
-    session_id: str
-    user_id: str
-    action: ActionProposal
-    expires_at: float
-
-
 class ChatService:
     def __init__(
         self,
@@ -50,6 +47,7 @@ class ChatService:
         session_factory: async_sessionmaker[AsyncSession],
         rate_limiter: RateLimiter,
         registry: ToolRegistry | None = None,
+        confirmation_store: ConfirmationStore | None = None,
     ) -> None:
         self._settings = settings
         self._llm = llm
@@ -58,6 +56,7 @@ class ChatService:
         self._session_factory = session_factory
         self._rate_limiter = rate_limiter
         self.registry = registry or build_tool_registry(retriever)
+        self._confirmation_store = confirmation_store or InMemoryConfirmationStore()
         self._pending_actions: dict[str, PendingConfirmation] = {}
         self._graph = build_graph(
             llm=llm,
@@ -66,6 +65,12 @@ class ChatService:
             reranker=reranker,
             registry=self.registry,
         )
+
+    @property
+    def confirmation_store(self) -> ConfirmationStore:
+        if not hasattr(self, "_confirmation_store") or self._confirmation_store is None:
+            self._confirmation_store = InMemoryConfirmationStore()
+        return self._confirmation_store
 
     async def chat(self, request: ChatRequest, *, trace_id: str) -> ChatResponse:
         await self._enforce_rate_limit(request.user_id)
@@ -77,7 +82,7 @@ class ChatService:
             response = self._to_response(result, session_id=session_id, trace_id=trace_id)
             await self._persist(db, request, response, summary=result.get("summary") or "")
             await db.commit()
-        self._remember_pending(request, response)
+        await self._remember_pending(request, response)
         self._observe(response, started)
         return response
 
@@ -144,7 +149,7 @@ class ChatService:
             response = self._to_response(merged, session_id=session_id, trace_id=trace_id)
             await self._persist(db, request, response, summary=merged.get("summary") or "")
             await db.commit()
-        self._remember_pending(request, response)
+        await self._remember_pending(request, response)
         self._observe(response, started)
         # Never stream the LLM's JSON envelope or an answer that may still be
         # replaced by the faithfulness check. Only the final answer is public.
@@ -165,7 +170,7 @@ class ChatService:
         session_id: str,
         trace_id: str,
     ) -> AgentState:
-        confirmed_action = self._resolve_confirmation(request, session_id)
+        confirmed_action = await self._resolve_confirmation(request, session_id)
         sessions = SessionRepository(db)
         await sessions.get_or_create(session_id, request.user_id)
         history = await sessions.recent_messages(session_id)
@@ -188,32 +193,41 @@ class ChatService:
             "idempotency_key": request.idempotency_key,
         }
 
-    def _resolve_confirmation(self, request: ChatRequest, session_id: str) -> ActionProposal | None:
+    async def _resolve_confirmation(
+        self, request: ChatRequest, session_id: str
+    ) -> ActionProposal | None:
         if not request.confirm_action_id:
             return None
-        pending = self._pending_actions.get(request.confirm_action_id)
+        pending = await self.confirmation_store.get(request.confirm_action_id)
+        if pending is None:
+            pending = self._pending_actions.get(request.confirm_action_id)
+        now = time.time()
         if (
             pending is None
-            or pending.expires_at < time.monotonic()
+            or pending.expires_at < now
             or pending.session_id != session_id
             or pending.user_id != request.user_id
         ):
             raise InvalidRequestError("待确认操作不存在或已过期，请重新发起。")
+        await self.confirmation_store.delete(request.confirm_action_id)
+        self._pending_actions.pop(request.confirm_action_id, None)
         return pending.action
 
-    def _remember_pending(self, request: ChatRequest, response: ChatResponse) -> None:
-        now = time.monotonic()
+    async def _remember_pending(self, request: ChatRequest, response: ChatResponse) -> None:
+        now = time.time()
         self._pending_actions = {
             key: value for key, value in self._pending_actions.items() if value.expires_at > now
         }
         action = response.pending_action
         if action is not None:
-            self._pending_actions[action.action_id] = PendingConfirmation(
+            confirmation = PendingConfirmation(
                 session_id=response.session_id,
                 user_id=request.user_id,
                 action=action,
                 expires_at=now + 15 * 60,
             )
+            self._pending_actions[action.action_id] = confirmation
+            await self.confirmation_store.put(action.action_id, confirmation, ttl_seconds=15 * 60)
 
     async def _invoke(self, state: AgentState) -> AgentState:
         try:
