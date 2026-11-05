@@ -14,6 +14,7 @@ from app.agents.nodes.guardrail import guardrail_node
 from app.agents.nodes.intent import IntentClassifier
 from app.agents.nodes.memory import memory_node
 from app.agents.nodes.planner import Planner, planner_node
+from app.agents.nodes.prototypical_router import PrototypicalIntentRouter
 from app.agents.nodes.retrieval import retrieval_node
 from app.agents.nodes.router import intent_node, router_node
 from app.agents.state import AgentState
@@ -49,8 +50,13 @@ def build_graph(
     retriever: HybridRetriever,
     reranker: DocumentReranker,
     registry: ToolRegistry,
+    embedder: Any = None,
 ) -> CompiledStateGraph:
-    classifier = IntentClassifier(llm)
+    embed_provider = embedder or getattr(retriever, "embedder", None)
+    proto_router = (
+        PrototypicalIntentRouter(embed_provider) if embed_provider is not None else None
+    )
+    classifier = IntentClassifier(llm, prototypical_router=proto_router)
     adaptive = AdaptiveRouter(llm)
     rewriter = QueryRewriter(llm)
     self_rag = SelfRAGLoop(retriever, reranker, rewriter, llm, settings)

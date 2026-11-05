@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from app.agents.nodes.intent_overlay import apply_intent_overlay
+from app.agents.nodes.prototypical_router import PrototypicalIntentRouter
 from app.core.constants import PROMPT_VERSION_INTENT
 from app.core.enums import IntentLabel
 from app.core.exceptions import LLMOutputError, LLMProviderError
@@ -68,11 +69,13 @@ class IntentClassifier:
         system_prompt: str = INTENT_SYSTEM,
         prompt_version: str = PROMPT_VERSION_INTENT,
         apply_overlay: bool = True,
+        prototypical_router: PrototypicalIntentRouter | None = None,
     ) -> None:
         self._llm = llm
         self._system_prompt = system_prompt
         self._prompt_version = prompt_version
         self._apply_overlay = apply_overlay
+        self._prototypical_router = prototypical_router
 
     async def classify(self, query: str) -> IntentResult:
         clean_text = query.strip()
@@ -85,6 +88,14 @@ class IntentClassifier:
                 rationale="fast_path:exact_greeting",
                 prompt_version="fast_path_v1",
             )
+        # Level 1: Prototypical Intent Router fast path (if initialized)
+        if self._prototypical_router is not None:
+            try:
+                proto_result = await self._prototypical_router.classify(query)
+                if proto_result is not None:
+                    return self._maybe_overlay(query, proto_result)
+            except Exception:
+                pass  # Isolated fast-path failure; smoothly fall through to rules/LLM
         fallback = rule_based_intent(query)
         if isinstance(self._llm, OfflineLLMProvider):
             return self._maybe_overlay(query, fallback)

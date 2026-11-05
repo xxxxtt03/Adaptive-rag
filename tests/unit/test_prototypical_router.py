@@ -63,3 +63,19 @@ async def test_prototypical_router_fallback_below_threshold():
 
     result = await router.classify("完全不相干的罕见文字")
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_intent_classifier_uses_prototypical_router_fast_path():
+    from app.agents.nodes.intent import IntentClassifier
+    from app.providers.fake import OfflineLLMProvider
+
+    embedder = CharacterAwareHashEmbedder(dim=256)
+    proto_router = PrototypicalIntentRouter(embedder, confidence_threshold=0.2)
+    classifier = IntentClassifier(OfflineLLMProvider(), prototypical_router=proto_router)
+
+    # Query matches logistics via prototypical router
+    result = await classifier.classify("查一下快递发货进度")
+    assert result is not None
+    assert isinstance(result.label, IntentLabel)
+    assert "prototypical_router" in result.rationale
