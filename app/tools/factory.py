@@ -1,6 +1,7 @@
 """Tool registry construction."""
 
 from app.retrieval.hybrid import HybridRetriever
+from app.tools.address_tools import ParseAddressTool
 from app.tools.aftersale_tools import (
     CancelOrderTool,
     CreateRefundRequestTool,
@@ -55,6 +56,7 @@ def build_tool_registry(retriever: HybridRetriever) -> ToolRegistry:
         IssueInvoiceTool(),
         GetLoyaltyProfileTool(),
         RedeemPointsTool(),
+        ParseAddressTool(),
     ]
     for tool in tools:
         registry.register(tool)
