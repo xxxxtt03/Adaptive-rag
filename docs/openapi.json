@@ -1,0 +1,778 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Adaptive-RAG Customer Service",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Liveness",
+        "operationId": "liveness_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Readiness",
+        "description": "Hard dependency: database. Redis / Qdrant / LLM key are reported but optional.",
+        "operationId": "readiness_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/capabilities": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Capabilities",
+        "description": "Report the concrete backends selected after startup and fallbacks.",
+        "operationId": "capabilities_api_v1_capabilities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Chat",
+        "description": "Answer one turn and return the full JSON response.",
+        "operationId": "chat_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/stream": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Chat Stream",
+        "description": "Answer one turn as an SSE stream of node, token and answer events.",
+        "operationId": "chat_stream_api_v1_chat_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Generate Token",
+        "description": "Issue a signed JWT access token for a given user identity.",
+        "operationId": "generate_token_api_v1_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tools": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Tools",
+        "operationId": "list_tools_api_v1_admin_tools_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Tools Api V1 Admin Tools Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/skills": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Skills",
+        "operationId": "list_skills_api_v1_admin_skills_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Skills Api V1 Admin Skills Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Metrics",
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionProposal": {
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "tool_name": {
+            "type": "string",
+            "title": "Tool Name"
+          },
+          "arguments": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Arguments"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/ToolRisk"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_id",
+          "tool_name",
+          "arguments",
+          "risk",
+          "summary"
+        ],
+        "title": "ActionProposal"
+      },
+      "CapabilitiesResponse": {
+        "properties": {
+          "database": {
+            "type": "string",
+            "title": "Database"
+          },
+          "cache": {
+            "type": "string",
+            "title": "Cache"
+          },
+          "vector_store": {
+            "type": "string",
+            "title": "Vector Store"
+          },
+          "retriever": {
+            "type": "string",
+            "title": "Retriever"
+          },
+          "reranker": {
+            "type": "string",
+            "title": "Reranker"
+          },
+          "llm": {
+            "type": "string",
+            "title": "Llm"
+          },
+          "degraded": {
+            "type": "boolean",
+            "title": "Degraded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "database",
+          "cache",
+          "vector_store",
+          "retriever",
+          "reranker",
+          "llm",
+          "degraded"
+        ],
+        "title": "CapabilitiesResponse",
+        "description": "Resolved runtime backends and whether the process is degraded."
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "user_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "User Id",
+            "default": "anonymous"
+          },
+          "stream": {
+            "type": "boolean",
+            "title": "Stream",
+            "default": false
+          },
+          "confirm_action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Action Id"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "title": "Trace Id"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntentLabel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "complexity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryComplexity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalStrategy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "pending_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionProposal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refused": {
+            "type": "boolean",
+            "title": "Refused",
+            "default": false
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "token_usage": {
+            "$ref": "#/components/schemas/TokenUsage"
+          },
+          "latency": {
+            "$ref": "#/components/schemas/LatencyBreakdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "session_id",
+          "trace_id"
+        ],
+        "title": "ChatResponse"
+      },
+      "Citation": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "title",
+          "chunk_id"
+        ],
+        "title": "Citation"
+      },
+      "DependencyStatus": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "ready"
+        ],
+        "title": "DependencyStatus"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IntentLabel": {
+        "type": "string",
+        "enum": [
+          "greeting",
+          "chitchat",
+          "faq_policy",
+          "order_inquiry",
+          "logistics",
+          "refund",
+          "return_exchange",
+          "cancel_order",
+          "product_consult",
+          "recommendation",
+          "coupon",
+          "complaint",
+          "human_handoff",
+          "out_of_scope"
+        ],
+        "title": "IntentLabel"
+      },
+      "LatencyBreakdown": {
+        "properties": {
+          "intent_ms": {
+            "type": "number",
+            "title": "Intent Ms",
+            "default": 0.0
+          },
+          "routing_ms": {
+            "type": "number",
+            "title": "Routing Ms",
+            "default": 0.0
+          },
+          "retrieval_ms": {
+            "type": "number",
+            "title": "Retrieval Ms",
+            "default": 0.0
+          },
+          "rerank_ms": {
+            "type": "number",
+            "title": "Rerank Ms",
+            "default": 0.0
+          },
+          "tool_ms": {
+            "type": "number",
+            "title": "Tool Ms",
+            "default": 0.0
+          },
+          "llm_ms": {
+            "type": "number",
+            "title": "Llm Ms",
+            "default": 0.0
+          },
+          "total_ms": {
+            "type": "number",
+            "title": "Total Ms",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "title": "LatencyBreakdown"
+      },
+      "LivenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          }
+        },
+        "type": "object",
+        "title": "LivenessResponse"
+      },
+      "QueryComplexity": {
+        "type": "string",
+        "enum": [
+          "simple",
+          "single_hop",
+          "multi_hop",
+          "tool_required",
+          "out_of_scope"
+        ],
+        "title": "QueryComplexity"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyStatus"
+            },
+            "type": "array",
+            "title": "Dependencies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ready"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "RetrievalStrategy": {
+        "type": "string",
+        "enum": [
+          "direct",
+          "single",
+          "multi",
+          "agent",
+          "refuse"
+        ],
+        "title": "RetrievalStrategy",
+        "description": "Adaptive-RAG routing targets.\n\nDIRECT: parametric / greeting answers, no retrieval.\nSINGLE: one-shot hybrid retrieval.\nMULTI: Self-RAG iterative retrieval for multi-hop questions.\nAGENT: planner + tools, optionally with retrieval.\nREFUSE: query boundary / policy refusal."
+      },
+      "TokenRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "TokenRequest"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "TokenResponse"
+      },
+      "TokenUsage": {
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "title": "Prompt Tokens",
+            "default": 0
+          },
+          "completion_tokens": {
+            "type": "integer",
+            "title": "Completion Tokens",
+            "default": 0
+          },
+          "total_tokens": {
+            "type": "integer",
+            "title": "Total Tokens",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "TokenUsage"
+      },
+      "ToolRisk": {
+        "type": "string",
+        "enum": [
+          "read",
+          "write",
+          "destructive",
+          "external"
+        ],
+        "title": "ToolRisk"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
