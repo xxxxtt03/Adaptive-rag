@@ -144,3 +144,42 @@ class EscalateToHumanTool(Tool):
                 "reason": parsed.reason,
             },
         )
+
+
+class VipBenefitsInput(BaseModel):
+    level: str = Field(
+        default="gold",
+        description="会员等级，如 normal, silver, gold, diamond",
+    )
+
+
+class GetVipBenefitsTool(Tool):
+    name = "get_vip_benefits"
+    description = (
+        "查询不同等级会员的专享权益（如专属客服、包邮券、退换免运费、积分倍率）。"
+        "何时用：用户询问会员权益、升级特权、黄金/钻石会员福利等。"
+        "何时不用：查询具体优惠券规则优先使用 get_coupon；查询订单退款优先使用 get_refund_status。"
+        "参数 level：会员级别，可选 normal/silver/gold/diamond，默认 gold。"
+        "返回 {level, discount_rate, free_shipping, exclusive_support, points_multiplier}。"
+    )
+    risk = ToolRisk.READ
+    input_model = VipBenefitsInput
+
+    async def execute(self, parsed: VipBenefitsInput, context: ToolContext) -> ToolResult:
+        benefits_map = {
+            "normal": {"discount_rate": 1.0, "free_shipping": False, "points_multiplier": 1.0, "exclusive_support": False},
+            "silver": {"discount_rate": 0.98, "free_shipping": False, "points_multiplier": 1.2, "exclusive_support": False},
+            "gold": {"discount_rate": 0.95, "free_shipping": True, "points_multiplier": 1.5, "exclusive_support": True},
+            "diamond": {"discount_rate": 0.90, "free_shipping": True, "points_multiplier": 2.0, "exclusive_support": True},
+        }
+        level = parsed.level.lower()
+        benefit = benefits_map.get(level, benefits_map["normal"])
+        return ToolResult(
+            name=self.name,
+            success=True,
+            output={
+                "level": level,
+                **benefit,
+                "note": "权益随自然月更新，详情见会员中心",
+            },
+        )

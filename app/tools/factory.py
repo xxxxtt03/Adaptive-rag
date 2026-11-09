@@ -11,6 +11,7 @@ from app.tools.base import Tool
 from app.tools.knowledge_tools import (
     EscalateToHumanTool,
     GetCouponTool,
+    GetVipBenefitsTool,
     GetWarrantyTool,
     SearchKnowledgeTool,
 )
@@ -44,6 +45,7 @@ def build_tool_registry(retriever: HybridRetriever) -> ToolRegistry:
         GetCouponTool(),
         CheckInventoryTool(),
         GetWarrantyTool(),
+        GetVipBenefitsTool(),
         SearchKnowledgeTool(retriever),
         EscalateToHumanTool(),
     ]
