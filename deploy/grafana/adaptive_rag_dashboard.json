@@ -1,0 +1,305 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "系统概览与流量指标 (Traffic & QPS)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "req/s",
+            "axisPlacement": "auto",
+            "fillOpacity": 20,
+            "lineWidth": 2
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(cs_requests_total[1m])) by (strategy, status)",
+          "legendFormat": "{{strategy}} - {{status}}"
+        }
+      ],
+      "title": "总吞吐量 (QPS by Strategy & Status)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right"
+        },
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(cs_routing_total[1h])) by (strategy)",
+          "legendFormat": "{{strategy}}"
+        }
+      ],
+      "title": "Adaptive-RAG 路由决策分布 (1h 占比)",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 101,
+      "title": "延迟耗时分阶段剖析 (Latency Breakdown by Stage)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Seconds",
+            "fillOpacity": 15,
+            "lineWidth": 2
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(cs_request_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P50 Latency"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(cs_request_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P95 Latency"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(cs_request_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P99 Latency"
+        }
+      ],
+      "title": "端到端会话延迟 (E2E Latency Quantiles)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Seconds",
+            "fillOpacity": 25,
+            "lineWidth": 2
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(cs_stage_latency_seconds_bucket[5m])) by (le, stage))",
+          "legendFormat": "P95 Stage: {{stage}}"
+        }
+      ],
+      "title": "各管线阶段 P95 耗时 (Routing, Retrieval, Cross-Encoder, LLM)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 102,
+      "title": "工具调度、幻觉与 Token 成本 (Tools, Quality & Cost)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 19
+      },
+      "id": 5,
+      "options": {
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(cs_tool_calls_total[1h])) by (tool, status)",
+          "legendFormat": "{{tool}} ({{status}})"
+        }
+      ],
+      "title": "工具调用频次与成功率 (Tool Invocations 1h)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "cps"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 19
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum(rate(cs_tokens_total[5m])) by (kind)",
+          "legendFormat": "Token Rate: {{kind}}"
+        }
+      ],
+      "title": "Token 消耗速率 (Input vs Output Tokens/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 19
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(increase(cs_hallucination_flags_total[1h]))",
+          "legendFormat": "忠实度/幻觉校验拦截数"
+        }
+      ],
+      "title": "幻觉拒绝拦截数 (Faithfulness Gate 1h)",
+      "type": "stat"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["adaptive-rag", "llm", "production"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Adaptive-RAG 工业级监控大盘 (Production Observability)",
+  "uid": "adaptive-rag-dashboard"
+}
