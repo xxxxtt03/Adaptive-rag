@@ -13,6 +13,7 @@ from app.retrieval.cache import (
     MemoryRetrievalCache,
     RedisRetrievalCache,
     RetrievalCache,
+    SemanticRetrievalCache,
     _looks_like_order_query,
     cache_key,
 )
@@ -159,3 +160,44 @@ async def test_redis_cache_get_degrades_on_error() -> None:
 async def test_redis_cache_set_swallows_error() -> None:
     cache = RedisRetrievalCache(_BrokenRedis(), ttl_seconds=60)
     await cache.set("退货", 3, [_chunk()])  # must not raise
+
+
+class _MockEmbedder:
+    def __init__(self, mapping: dict[str, list[float]]) -> None:
+        self.mapping = mapping
+        self.default = [0.0, 1.0, 0.0]
+
+    async def embed_queries(self, queries: list[str]) -> list[list[float]]:
+        return [self.mapping.get(q, self.default) for q in queries]
+
+
+@pytest.mark.asyncio
+async def test_semantic_cache_hit_on_similar_query() -> None:
+    embedder = _MockEmbedder(
+        {
+            "7天无理由退货运费谁出": [1.0, 0.0, 0.0],
+            "七天无理由退货运费是由买家承担吗": [0.98, 0.05, 0.0],  # Cosine ~ 0.998
+            "帮我查一下华为手机多少钱": [0.0, 1.0, 0.0],  # Cosine = 0.0
+        }
+    )
+    cache = SemanticRetrievalCache(embedder, ttl_seconds=60, similarity_threshold=0.92)
+
+    await cache.set("7天无理由退货运费谁出", 3, [_chunk(content="质量问题卖家出，非质量买家出")])
+
+    # Paraphrased query should HIT cache
+    hit = await cache.get("七天无理由退货运费是由买家承担吗", 3)
+    assert hit is not None
+    assert hit[0].content == "质量问题卖家出，非质量买家出"
+
+    # Completely different query should MISS cache
+    miss = await cache.get("帮我查一下华为手机多少钱", 3)
+    assert miss is None
+
+
+@pytest.mark.asyncio
+async def test_semantic_cache_skips_order_query() -> None:
+    embedder = _MockEmbedder({"ORD10001 的物流": [1.0, 0.0, 0.0]})
+    cache = SemanticRetrievalCache(embedder, ttl_seconds=60)
+    await cache.set("ORD10001 的物流", 3, [_chunk()])
+    assert cache._entries == []
+
