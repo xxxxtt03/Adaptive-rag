@@ -21,8 +21,8 @@
 | 文档解析 | 生产 Unstructured（PDF/Office/HTML/图）；缺依赖或 testing 降级 Markdown 标题切分。OCR/复杂表格不保证 | `app/retrieval/unstructured_parser.py` |
 | 文本清洗 | 切块后 NFKC/空白/硬换行；精确去重；近重复只日志。不做 embedding 聚类，不改中文数字。「七天」保持「七天」 | `app/retrieval/cleaning.py` |
 | 知识库 PII | 仅非 `.md` 入库前 `mask_pii`；政策 Markdown 与日志脱敏分开 | `app/core/security.py` |
-| 多租户 | 无；`user_id` 字符串隔离 | `OrderRepository.get_visible_order` |
-| 身份认证 | API 直接接受请求体 `user_id`，尚未验证身份；生产需可信网关绑定用户身份 | `app/api/routes/chat.py` |
+| 多租户 | 租户级 `user_id` 字符串隔离与会话属主强校验 | `OrderRepository`、`SessionRepository` |
+| 身份认证 | 支持 JWT 签名鉴权并由服务端强覆盖请求体 `user_id`；开发环境支持可配回退 | `app/core/auth.py`、`app/api/routes/chat.py` |
 | 演示数据 | 启动不自动写入；显式运行 `python -m scripts.seed_demo`，可重复执行 | `scripts/seed_demo.py` |
 | 启动迁移 | `create_all`，Alembic 有版本但默认不跑 | `alembic/versions/` |
 
@@ -37,6 +37,10 @@
 | 忠实度 LLM 自纠错 | `self_correct_answer` |
 | Unstructured 多格式 ingest | `app/retrieval/unstructured_parser.py`（testing / 缺 extra 降级 Markdown） |
 | 切块后清洗与精确去重 | `app/retrieval/cleaning.py` |
+| JWT 零信任认证与请求体身份强覆盖 | `app/core/auth.py`、`app/api/dependencies.py`、`app/api/routes/chat.py` |
+| 会话属主隔离与防水平越权 (P0 IDOR) | `app/repositories/session_repository.py`、`tests/unit/test_session_isolation.py` |
+| 生产 Nginx SSE 直通优化 (proxy_buffering off) | `deploy/nginx.multi.conf` |
+| VIP 会员权益查询工具扩展 | `GetVipBenefitsTool`（`app/tools/knowledge_tools.py`、`app/tools/factory.py`） |
 
 ## 不计划用「简历堆料」补的
 
