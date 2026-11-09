@@ -65,9 +65,9 @@ def _strip_footer(text: str) -> str:
 
 
 def merge_markdown() -> str:
-    p1 = _strip_footer((DOCS / "面试1").read_text(encoding="utf-8"))
-    p2 = _strip_footer((DOCS / "面试2").read_text(encoding="utf-8"))
-    p3 = _strip_footer((DOCS / "面试3").read_text(encoding="utf-8"))
+    p1 = _strip_footer((DOCS / "interview" / "01-langgraph-planning-intent.md").read_text(encoding="utf-8"))
+    p2 = _strip_footer((DOCS / "interview" / "02-adaptive-rag-chunking-hybrid.md").read_text(encoding="utf-8"))
+    p3 = _strip_footer((DOCS / "interview" / "03-rerank-memory-skill-mcp.md").read_text(encoding="utf-8"))
     parts = [
         COVER.strip(),
         "",
