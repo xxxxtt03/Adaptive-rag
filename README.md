@@ -259,8 +259,19 @@ HTTP 层处理校验与序列化，`ChatService` 编排对话，Graph 决定路�
 CI 在 Python 3.11 / 3.12 上检查锁文件、Ruff、mypy 和 pytest；[查看工作流](.github/workflows/ci.yml)。本地可运行：
 
 ```bash
+# 1. 运行全量单元测试 (202 passed in 3.4s)
 python -m pytest -q
+
+# 2. 运行检索消融实验 (P@1: 89.2%, Recall@3: 96.2%, MRR: 0.9321)
 python -m eval.runner --task retrieval
+
+# 3. 运行 7 轮全场景端到端真实大模型回归套件
+python scripts/e2e_walkthrough.py
+
+# 4. 运行毫秒级异步并发压力基准测试
+python scripts/stress_test.py
+
+# 5. 前端单测与打包构建
 cd frontend && npm test && npm run build
 ```
 
@@ -276,7 +287,8 @@ cd frontend && npm test && npm run build
 | 查接口、配置、安全与可靠性 | [API](docs/06-api-reference.md) · [配置](docs/07-configuration.md) · [安全](docs/09-security.md) · [可靠性](docs/08-reliability.md) |
 | 核对实验口径与数字 | [评测方法](docs/10-evaluation.md) · [原始数字说明](eval/MEASURED.md) |
 | 系统学习 RAG 工程实践 | [12 部分教学文档](docs/tutorial/README.md) |
-| 准备 Agent/RAG 面试 | [Chapter 1](docs/interview/chapter1.md) · [Chapter 2](docs/interview/chapter2.md) · [Chapter 3](docs/interview/chapter3.md) · [17 维度索引](docs/16-interview-bagu-map.md) |
+| 准备 Agent/RAG 面试 | [🔥 面试问答全集 (1,842行精校)](docs/面试问答全集.md) · [排版 PDF 册](output/pdf/面试问答全集.pdf) · [17 维度索引](docs/16-interview-bagu-map.md) |
+| 生产级监控与云原生部署 | [K8s 生产清册](deploy/k8s/) · [Grafana 监控大盘](deploy/grafana/adaptive_rag_dashboard.json) · [并发压测](scripts/stress_test.py) |
 
 完整索引见 [`docs/README.md`](docs/README.md)。源码可从 `app/asgi.py` → `app/services/chat_service.py` → `app/agents/graph.py` 开始读；Web 代码在 `frontend/src/`。
 
