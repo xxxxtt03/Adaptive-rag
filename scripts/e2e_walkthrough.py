@@ -113,11 +113,27 @@ async def run_walkthrough():
             except Exception as e:
                 print(f"   🛡️ 安全拦截成功: 捕获异常 [{e.__class__.__name__}: {e}]")
                 print("   🔒 机制生效说明: 提案 Token 为单次有效（Single-use Nonce），消费后立即销毁，坚决杜绝二次恶意提交！")
+
+        # ---------------------------------------------------------
+        # Case 6: 发票开具申请与专票税号核验 (Invoice Issuance & VAT Tool)
+        # ---------------------------------------------------------
+        print("\n▶️ [Turn 6] 发票开具与专票税号核验 (Invoice Issuance Tool)")
+        req6 = ChatRequest(
+            message="帮我开一张 ORD10002 的企业增值税专票，抬头是北京智联创想科技有限公司，税号是 91110108MA01ABCDEF，邮箱是 finance@example.com",
+            session_id=session_id,
+            user_id=user_id,
+        )
+        print(f"👤 用户: {req6.message}")
+        res6 = await container.chat_service.chat(req6, trace_id="trace-006")
+        print(f"🤖 助手:\n{res6.answer.strip()}")
+        print(f"   📊 路由分类: intent={res6.intent}, complexity={res6.complexity}")
+        print(f"   ⏱️ 耗时: total={res6.latency.total_ms:.1f}ms")
+
     finally:
         await container.aclose()
 
     print("\n" + "=" * 80)
-    print("✅ 全链路 5 个场景端到端实操验收完毕！各项指标与业务状态流转均达到设计预期。")
+    print("✅ 全链路 6 个场景端到端实操验收完毕！各项指标与业务状态流转均达到设计预期。")
     print("=" * 80)
 
 
