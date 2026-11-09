@@ -67,3 +67,6 @@ logs/
 *.tmp
 scratch/
 .node/
+.pytest_temp/
+eval/reports/*.txt
+data/
