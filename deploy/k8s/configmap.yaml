@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adaptive-rag-config
+  namespace: adaptive-rag
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  LOCAL_EMBEDDING_ENABLED: "true"
+  CROSS_ENCODER_ENABLED: "true"
+  QDRANT_URL: "http://qdrant.adaptive-rag.svc.cluster.local:6333"
+  REDIS_URL: "redis://redis.adaptive-rag.svc.cluster.local:6379/0"
+  DATABASE_URL: "postgresql+asyncpg://cs:CHANGE_ME_PASSWORD@postgres.adaptive-rag.svc.cluster.local:5432/adaptive_rag_cs"
+  RATE_LIMIT_PER_MINUTE: "120"
+  RRF_K: "60"
+  RERANK_TOP_N: "5"
+  CONFIRMATION_TTL_MINUTES: "15"
