@@ -28,5 +28,13 @@ def test_match_skill_invoice_issuance() -> None:
     assert "issue_invoice" in skill["tools"]
 
 
+def test_match_skill_loyalty_redemption() -> None:
+    skill = match_skill("帮我用会员积分兑换优惠券", "coupon")
+    assert skill is not None
+    assert skill["name"] == "loyalty_redemption"
+    assert "get_loyalty_profile" in skill["tools"]
+    assert "redeem_points" in skill["tools"]
+
+
 def test_no_skill_for_chitchat() -> None:
     assert match_skill("今天天气真好", "chitchat") is None

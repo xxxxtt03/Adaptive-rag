@@ -22,7 +22,7 @@ _KEYWORD_RULES: list[tuple[tuple[str, ...], IntentLabel]] = [
     (("退款进度", "钱什么时候到"), IntentLabel.REFUND),
     (("退货", "换货", "七天", "7天无理由"), IntentLabel.RETURN_EXCHANGE),
     (("取消订单", "不想要了"), IntentLabel.CANCEL_ORDER),
-    (("优惠券", "满减", "包邮券"), IntentLabel.COUPON),
+    (("优惠券", "满减", "包邮券", "积分", "换券", "兑换券"), IntentLabel.COUPON),
     (("推荐", "有什么类似"), IntentLabel.RECOMMENDATION),
     (("保修", "质保", "关税", "海淘", "跨境"), IntentLabel.FAQ_POLICY),
     (("投诉", "差评", "态度"), IntentLabel.COMPLAINT),

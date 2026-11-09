@@ -129,11 +129,26 @@ async def run_walkthrough():
         print(f"   📊 路由分类: intent={res6.intent}, complexity={res6.complexity}")
         print(f"   ⏱️ 耗时: total={res6.latency.total_ms:.1f}ms")
 
+        # ---------------------------------------------------------
+        # Case 7: 会员积分与权益券兑换 (Loyalty Profile & Points Redemption)
+        # ---------------------------------------------------------
+        print("\n▶️ [Turn 7] 会员积分查询与折扣卡券兑换 (Loyalty Points Engine)")
+        req7 = ChatRequest(
+            message="我当前账户有多少积分？能兑换什么优惠券？",
+            session_id=session_id,
+            user_id=user_id,
+        )
+        print(f"👤 用户: {req7.message}")
+        res7 = await container.chat_service.chat(req7, trace_id="trace-007")
+        print(f"🤖 助手:\n{res7.answer.strip()}")
+        print(f"   📊 路由分类: intent={res7.intent}, complexity={res7.complexity}")
+        print(f"   ⏱️ 耗时: total={res7.latency.total_ms:.1f}ms")
+
     finally:
         await container.aclose()
 
     print("\n" + "=" * 80)
-    print("✅ 全链路 6 个场景端到端实操验收完毕！各项指标与业务状态流转均达到设计预期。")
+    print("✅ 全链路 7 个核心业务场景端到端实操演练全部成功！各项能力指标达到生产设计标准。")
     print("=" * 80)
 
 

@@ -1,0 +1,12 @@
+{
+  "name": "loyalty_redemption",
+  "description": "会员积分查询、会员等级特权以及积分兑换优惠券",
+  "triggers": ["积分", "会员积分", "积分兑换", "兑换优惠券", "换券", "我的积分", "积分余额"],
+  "steps": [
+    "调用 get_loyalty_profile 查询用户当前可用积分、会员等级与可兑换券列表",
+    "如用户询问会员折扣，调用 get_vip_benefits 查询等级倍率与权益",
+    "如用户明确发起兑换指令，调用 redeem_points 执行积分扣减并生成券码",
+    "向用户反馈扣减明细、剩余积分与新发放优惠券的使用条件"
+  ],
+  "tools": ["get_loyalty_profile", "redeem_points", "get_vip_benefits", "search_knowledge"]
+}
