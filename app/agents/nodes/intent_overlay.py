@@ -84,6 +84,10 @@ def high_precision_intent(query: str) -> IntentLabel | None:
             "签收后怎么验货",
             "人为损坏",
             "进水能修",
+            "关税",
+            "海淘",
+            "跨境",
+            "保税仓",
         )
     ):
         return IntentLabel.FAQ_POLICY

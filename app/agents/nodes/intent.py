@@ -24,7 +24,7 @@ _KEYWORD_RULES: list[tuple[tuple[str, ...], IntentLabel]] = [
     (("取消订单", "不想要了"), IntentLabel.CANCEL_ORDER),
     (("优惠券", "满减", "包邮券"), IntentLabel.COUPON),
     (("推荐", "有什么类似"), IntentLabel.RECOMMENDATION),
-    (("保修", "质保"), IntentLabel.FAQ_POLICY),
+    (("保修", "质保", "关税", "海淘", "跨境"), IntentLabel.FAQ_POLICY),
     (("投诉", "差评", "态度"), IntentLabel.COMPLAINT),
     (("订单", "我的单"), IntentLabel.ORDER_INQUIRY),
 ]
