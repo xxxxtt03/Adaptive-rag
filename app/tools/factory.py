@@ -8,6 +8,7 @@ from app.tools.aftersale_tools import (
     GetRefundStatusTool,
 )
 from app.tools.base import Tool
+from app.tools.custom_tax_tools import CalculateDutyTool
 from app.tools.knowledge_tools import (
     EscalateToHumanTool,
     GetCouponTool,
@@ -48,6 +49,7 @@ def build_tool_registry(retriever: HybridRetriever) -> ToolRegistry:
         GetVipBenefitsTool(),
         SearchKnowledgeTool(retriever),
         EscalateToHumanTool(),
+        CalculateDutyTool(),
     ]
     for tool in tools:
         registry.register(tool)

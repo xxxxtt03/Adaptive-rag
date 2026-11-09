@@ -14,5 +14,12 @@ def test_match_skill_by_intent_when_no_trigger() -> None:
     assert skill["name"] == "order_tracking"
 
 
+def test_match_skill_cross_border_tax() -> None:
+    skill = match_skill("买这瓶香水要交多少关税", "faq_policy")
+    assert skill is not None
+    assert skill["name"] == "cross_border_tax"
+    assert "calculate_cross_border_tax" in skill["tools"]
+
+
 def test_no_skill_for_chitchat() -> None:
     assert match_skill("今天天气真好", "chitchat") is None

@@ -1,0 +1,12 @@
+{
+  "name": "cross_border_tax",
+  "description": "跨境海淘关税计算与限额核查标准流程",
+  "triggers": ["关税", "海淘税", "保税仓税", "跨境税", "免税额度"],
+  "steps": [
+    "确认商品价格与是否属于高档化妆品类目",
+    "检索跨境零售进口税收政策",
+    "调用关税计算工具计算适用综合税额",
+    "核查是否超过单笔 5000 元或年度 26000 元限额"
+  ],
+  "tools": ["calculate_cross_border_tax", "search_knowledge", "get_product_detail"]
+}
