@@ -21,5 +21,12 @@ def test_match_skill_cross_border_tax() -> None:
     assert "calculate_cross_border_tax" in skill["tools"]
 
 
+def test_match_skill_invoice_issuance() -> None:
+    skill = match_skill("我想为订单开具增值税专票", "faq_policy")
+    assert skill is not None
+    assert skill["name"] == "invoice_issuance"
+    assert "issue_invoice" in skill["tools"]
+
+
 def test_no_skill_for_chitchat() -> None:
     assert match_skill("今天天气真好", "chitchat") is None
